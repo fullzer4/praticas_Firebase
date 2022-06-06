@@ -9,6 +9,9 @@ function App() { //definir variaveis
 
   const [email, setEmail] =useState("")
   const [senha, setSenha] =useState("")
+  const [user, setUser]=useState(false)
+  const [userLogged, setUserLogged]=useState({})
+
 
   useEffect(()=>{
     async function loadPosts(){
@@ -29,6 +32,25 @@ function App() { //definir variaveis
     }
     loadPosts()
   }, [])
+
+  useEffect(() =>{
+    async function checkLogin(){ //verificar se o usuario esta logado
+      await firebase.auth().onAuthStateChanged((user)=>{
+        if(user){
+          setUser(true)
+          setUserLogged({
+            uid: user.uid,
+            email: user.email
+          })
+        }else{
+          setUser(false)
+          setUserLogged({})
+        }
+      })
+    }
+
+    checkLogin()
+  },[])
 
   async function handleAdd(){
     await firebase.firestore().collection("posts") //sera adicionado em post
@@ -96,7 +118,7 @@ function App() { //definir variaveis
     })
   }
 
-  async function novoUsuario(){
+  async function novoUsuario(){ //criar novo usuario
     await firebase.auth().createUserWithEmailAndPassword(email, senha)
     .then(()=>{
       setEmail("")
@@ -115,42 +137,68 @@ function App() { //definir variaveis
     })
   }
 
+  async function logout(){ //desogar
+    await firebase.auth().signOut()
+  }
+
+  async function fazerlogin(){
+    await firebase.auth().signInWithEmailAndPassword(email,senha)
+    .then(()=>{
+      console.log("foi");
+    })
+    .catch((error) =>{
+      console.log(`erro: ${error}`);
+    })
+  }
+
   return (
     <div className="App">
-      <h1>Autenticacao:</h1><br/>
-      <label>Email</label>
-      <input type="text" value={email} onChange={ (e)=> setEmail(e.target.value)}/><br/>
-      <label>Senha</label>
-      <input type="password" value={senha} onChange={ (e)=> setSenha(e.target.value)}/><br/>
-      <button onClick={novoUsuario}>Cadastrar</button><br/><br/>
-
+      {user && (
+        <div>
+          <strong>Seja Bem vindo</strong>
+          <span>{userLogged.uid} - {userLogged.email}</span>
+          <br/>
+        </div>
+      )} 
+      <div>
+        <h1>Autenticacao:</h1><br/>
+        <label>Email</label>
+        <input type="text" value={email} onChange={ (e)=> setEmail(e.target.value)}/><br/>
+        <label>Senha</label>
+        <input type="password" value={senha} onChange={ (e)=> setSenha(e.target.value)}/><br/>
+        <button onClick={fazerlogin}>Fazer login</button>
+        <button onClick={novoUsuario}>Cadastrar</button><br/>
+        <button onClick={logout}> Sair da conta </button><br/><br/>
+      </div>
       <hr/>
-      <h2>banco de Dados:</h2><br/>
-      <label>ID:</label>
-      <input type="text" value={idPost} onChange={ (e) => setIdPost(e.target.value)}/>
+      <div>
+        <h2>banco de Dados:</h2><br/>
+        <label>ID:</label>
+        <input type="text" value={idPost} onChange={ (e) => setIdPost(e.target.value)}/>
 
-      <label>Titulo:</label>
-      <textarea type="text" value={titulo} onChange={ (e) => setTitulo(e.target.value)}/>
+        <label>Titulo:</label>
+        <textarea type="text" value={titulo} onChange={ (e) => setTitulo(e.target.value)}/>
 
-      <label>Autor:</label>
-      <textarea type="text" value={autor} onChange={ (e) => setAutor(e.target.value)}/>
+        <label>Autor:</label>
+        <textarea type="text" value={autor} onChange={ (e) => setAutor(e.target.value)}/>
 
-      <button onClick={ handleAdd }>Cadastrar</button>
-      <button onClick={ buscaPost }>Bucar Post</button>
-      <button onClick={ editarPost }>Editar</button>
+        <button onClick={ handleAdd }>Cadastrar</button>
+        <button onClick={ buscaPost }>Bucar Post</button>
+        <button onClick={ editarPost }>Editar</button>
 
-      <ul>
-        {posts.map((post)=>{ //busca os posts
-          return(
-            <li key={post.id}>
-              <span>Id - {post.id}</span> <br/>
-              <span>Titulo: {post.titulo}</span> <br/>
-              <span>Autor: {post.autor}</span> <br/>
-              <button onClick={ ()=> excluirPost(post.id)}> Excluir</button> <br/><br/>
-            </li>
-          )
-        })}
-      </ul>
+        <ul>
+          {posts.map((post)=>{ //busca os posts
+            return(
+              <li key={post.id}>
+                <span>Id - {post.id}</span> <br/>
+                <span>Titulo: {post.titulo}</span> <br/>
+                <span>Autor: {post.autor}</span> <br/>
+                <button onClick={ ()=> excluirPost(post.id)}> Excluir</button> <br/><br/>
+              </li>
+            )
+          })}
+        </ul>'
+      </div>
     </div>
   );
 }
