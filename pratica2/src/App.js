@@ -84,7 +84,7 @@ function App() { //definir variaveis
 
       <hr/><br/>
       {Object.keys(user).length > 0 &&(
-        <div>
+        <div> 
           <strong>Ola </strong> {user.nome} <br/>
           <strong>Cargo </strong> {user.cargo} <br/>
           <strong>Email </strong> {user.email} <br/>
